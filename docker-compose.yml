@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  redis:
+    image: redis/redis-stack:latest
+    restart: always
+    ports:
+      - '6379:6379'
+      - '8001:8001'
+  envoy:
+    build:
+      context: envoy
+    ports:
+      - 8080:8080
+      - 9901:9901

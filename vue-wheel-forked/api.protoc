@@ -1,0 +1,56 @@
+syntax = "proto3";
+package gopher;
+
+option go_package = "github.com/jackmcguire1/api";
+
+// The gopher service definition.
+service Wheel {
+  rpc CreateWheel (CreateWheelReq) returns (CreateWheelResp) {}
+  rpc SpinWheel (SpinWheelReq) returns (SpinWheelResp) {}
+  rpc GetWheelStatus (WheelStatusReq) returns (WheelStatusResp) {}
+  rpc GetAllWheelNames (GetAllWheelnamesReq) returns (GetAllWheelnamesResp) {}
+}
+
+// CreateWheelReq fields to create a wheel of fortune
+message CreateWheelReq {
+  string name = 1;
+  repeated int64 segments = 2;
+}
+
+// CreateWheelReq fields represent the response of the creation
+// of a wheel of fortune
+message CreateWheelResp {
+  string message = 1;
+}
+
+// CreateWheelReq fields to create a wheel of fortune
+message SpinWheelReq {
+  string name = 1;
+}
+
+// CreateWheelReq fields represent the response of the creation
+// of a wheel of fortune
+message SpinWheelResp {
+  int64 winningSegmentIndex = 1;
+  int64 remainingPrizes = 2;
+  string error = 3;
+}
+
+// WheelStatusReq fields to get the status of a wheel of fortune
+message WheelStatusReq {
+  string name = 1;
+}
+
+// WheelStatusResp fields represent the response of state
+// of a wheel of fortune
+message WheelStatusResp {
+  int64 spins = 1;
+  repeated int64 prizes = 2;
+  bool enabled = 3;
+}
+
+message GetAllWheelnamesReq {}
+
+message GetAllWheelnamesResp {
+  repeated string wheels = 1;
+}

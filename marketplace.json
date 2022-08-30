@@ -1,0 +1,22 @@
+{
+  "app_name": "Wheel Of Fortune",
+  "description": "A wheel of fortune application that utilises redis for prize allocation and distribution",
+  "hidden": "false",
+  "rank": "",
+  "type": "Full App",
+  "contributed_by": "Community",
+  "repo_url": "https://github.com/jackmcguire1/wheeloffortune",
+  "download_url": "https://github.com/jackmcguire1/wheeloffortune/archive/refs/heads/main.zip",
+  "hosted_url": "",
+  "quick_deploy": "",
+  "deploy_buttons": [],
+  "language": ["Go", "Javascript", "YAML"],
+  "redis_commands": [],
+  "redis_features": ["EXEC lua script"],
+  "redis_modules": [],
+  "app_image_urls": ["https://dev-to-uploads.s3.amazonaws.com/uploads/articles/atoeo4ttm73zhnpggu7z.png", "https://dev-to-uploads.s3.amazonaws.com/uploads/articles/xow8dbsl2fqppg6a9p0g.png"],
+  "youtube_url": "",
+  "special_tags": ["Hackathon"],
+  "verticals": ["Technology"],
+  "markdown": "https://github.com/jackmcguire1/wheeloffortune/blob/main/README.md"
+}

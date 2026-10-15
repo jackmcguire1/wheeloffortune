@@ -1,0 +1,50 @@
+:root {
+  --wof-font: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body,
+.v-application {
+  font-family: var(--wof-font);
+}
+
+.v-application .text-h1,
+.v-application .text-h2,
+.v-application .text-h3,
+.v-application .text-h4,
+.v-application .text-h5,
+.v-application .text-h6 {
+  font-family: var(--wof-font) !important;
+  letter-spacing: -0.02em !important;
+}
+
+.v-theme--light.v-application {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(108, 60, 240, 0.12), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(255, 79, 139, 0.1), transparent 60%),
+    rgb(var(--v-theme-background)) !important;
+}
+
+.v-theme--dark.v-application {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(162, 131, 255, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(255, 111, 163, 0.12), transparent 60%),
+    rgb(var(--v-theme-background)) !important;
+}
+
+.glass {
+  background: rgba(var(--v-theme-surface), 0.78) !important;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(var(--v-border-color), 0.08);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, rgb(var(--v-theme-primary)), rgb(var(--v-theme-secondary)) 60%, rgb(var(--v-theme-accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}

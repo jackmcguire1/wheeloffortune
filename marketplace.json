@@ -1,6 +1,6 @@
 {
   "app_name": "Wheel Of Fortune",
-  "description": "A wheel of fortune application that utilises redis for prize allocation and distribution",
+  "description": "A wheel of fortune app where Redis Lua scripts atomically settle equal, weighted and inventory-based spins, with a Go Connect/gRPC API, Firebase Auth and a Vue 3 + Vuetify frontend",
   "hidden": "false",
   "rank": "",
   "type": "Full App",
@@ -10,13 +10,41 @@
   "hosted_url": "",
   "quick_deploy": "",
   "deploy_buttons": [],
-  "language": ["Go", "Javascript", "YAML"],
-  "redis_commands": [],
-  "redis_features": ["EXEC lua script"],
+  "language": [
+    "Go",
+    "TypeScript",
+    "Vue",
+    "Lua"
+  ],
+  "redis_commands": [
+    "EVALSHA",
+    "HINCRBY",
+    "HGETALL",
+    "LPUSH",
+    "LTRIM",
+    "LRANGE",
+    "ZADD",
+    "ZREVRANGE",
+    "MULTI"
+  ],
+  "redis_features": [
+    "Lua scripting",
+    "Hashes",
+    "Lists",
+    "Sorted sets",
+    "Transactions"
+  ],
   "redis_modules": [],
-  "app_image_urls": ["https://dev-to-uploads.s3.amazonaws.com/uploads/articles/atoeo4ttm73zhnpggu7z.png", "https://dev-to-uploads.s3.amazonaws.com/uploads/articles/xow8dbsl2fqppg6a9p0g.png"],
+  "app_image_urls": [
+    "https://dev-to-uploads.s3.amazonaws.com/uploads/articles/atoeo4ttm73zhnpggu7z.png",
+    "https://dev-to-uploads.s3.amazonaws.com/uploads/articles/xow8dbsl2fqppg6a9p0g.png"
+  ],
   "youtube_url": "",
-  "special_tags": ["Hackathon"],
-  "verticals": ["Technology"],
+  "special_tags": [
+    "Hackathon"
+  ],
+  "verticals": [
+    "Technology"
+  ],
   "markdown": "https://github.com/jackmcguire1/wheeloffortune/blob/main/README.md"
 }

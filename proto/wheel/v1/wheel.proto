@@ -1,0 +1,165 @@
+syntax = "proto3";
+
+package wheel.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/jackmcguire1/wheeloffortune/gen/wheel/v1;wheelv1";
+
+// WheelService manages and spins wheels of fortune.
+//
+// Read RPCs are public. Spinning requires a signed-in user (anonymous
+// Firebase users count). Mutating a wheel requires being its owner.
+service WheelService {
+  // CreateWheel defines a new wheel owned by the caller.
+  rpc CreateWheel(CreateWheelRequest) returns (CreateWheelResponse) {}
+  // GetWheel returns a wheel's definition and live state.
+  rpc GetWheel(GetWheelRequest) returns (GetWheelResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+  // ListWheels returns all wheels, newest first.
+  rpc ListWheels(ListWheelsRequest) returns (ListWheelsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+  // DeleteWheel removes a wheel and all of its state. Owner only.
+  rpc DeleteWheel(DeleteWheelRequest) returns (DeleteWheelResponse) {}
+  // SetWheelEnabled pauses or resumes spinning. Owner only.
+  rpc SetWheelEnabled(SetWheelEnabledRequest) returns (SetWheelEnabledResponse) {}
+  // RestockWheel resets every segment's stock to its initial value. Owner only.
+  rpc RestockWheel(RestockWheelRequest) returns (RestockWheelResponse) {}
+  // SpinWheel atomically picks a winning segment and consumes its stock.
+  rpc SpinWheel(SpinWheelRequest) returns (SpinWheelResponse) {}
+  // ListSpins returns the most recent spins of a wheel, newest first.
+  rpc ListSpins(ListSpinsRequest) returns (ListSpinsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+// WheelMode decides how the winning segment is chosen.
+enum WheelMode {
+  WHEEL_MODE_UNSPECIFIED = 0;
+  // Every segment that still has stock has the same chance of winning.
+  WHEEL_MODE_EQUAL = 1;
+  // Chance is proportional to each segment's configured weight.
+  WHEEL_MODE_WEIGHTED = 2;
+  // Chance is proportional to each segment's remaining stock, so the wheel
+  // drains evenly. Every segment must have limited stock.
+  WHEEL_MODE_INVENTORY = 3;
+}
+
+// SegmentSpec is the definition of a single slice of the wheel.
+message SegmentSpec {
+  string label = 1;
+  // CSS colour, e.g. "#7c4dff". Optional, the UI picks one when empty.
+  string color = 2;
+  // Relative weight, used in WEIGHTED mode. Must be >= 1 in that mode.
+  int32 weight = 3;
+  // Initial number of prizes. Unset means unlimited.
+  optional int32 stock = 4;
+}
+
+// Segment is a slice of the wheel together with its live counters.
+message Segment {
+  SegmentSpec spec = 1;
+  // Prizes left. Unset when the segment is unlimited.
+  optional int32 remaining = 2;
+  // Number of times this segment has been won.
+  int32 wins = 3;
+  // Current probability of this segment winning, between 0 and 1.
+  double probability = 4;
+}
+
+message Wheel {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  WheelMode mode = 4;
+  repeated Segment segments = 5;
+  bool enabled = 6;
+  int32 total_spins = 7;
+  string owner_uid = 8;
+  string owner_name = 9;
+  google.protobuf.Timestamp create_time = 10;
+  // True when no segment can be won any more.
+  bool exhausted = 11;
+}
+
+message Spin {
+  string wheel_id = 1;
+  int32 segment_index = 2;
+  string segment_label = 3;
+  string user_uid = 4;
+  string user_name = 5;
+  google.protobuf.Timestamp spin_time = 6;
+}
+
+message CreateWheelRequest {
+  string name = 1;
+  string description = 2;
+  WheelMode mode = 3;
+  repeated SegmentSpec segments = 4;
+}
+
+message CreateWheelResponse {
+  Wheel wheel = 1;
+}
+
+message GetWheelRequest {
+  string id = 1;
+}
+
+message GetWheelResponse {
+  Wheel wheel = 1;
+}
+
+message ListWheelsRequest {}
+
+message ListWheelsResponse {
+  repeated Wheel wheels = 1;
+}
+
+message DeleteWheelRequest {
+  string id = 1;
+}
+
+message DeleteWheelResponse {}
+
+message SetWheelEnabledRequest {
+  string id = 1;
+  bool enabled = 2;
+}
+
+message SetWheelEnabledResponse {
+  Wheel wheel = 1;
+}
+
+message RestockWheelRequest {
+  string id = 1;
+}
+
+message RestockWheelResponse {
+  Wheel wheel = 1;
+}
+
+message SpinWheelRequest {
+  string id = 1;
+}
+
+message SpinWheelResponse {
+  // Index into Wheel.segments of the winning segment.
+  int32 segment_index = 1;
+  Segment segment = 2;
+  // Wheel state after the spin.
+  Wheel wheel = 3;
+  Spin spin = 4;
+}
+
+message ListSpinsRequest {
+  string id = 1;
+  // Maximum number of spins to return. Defaults to 20, capped at 100.
+  int32 limit = 2;
+}
+
+message ListSpinsResponse {
+  repeated Spin spins = 1;
+}

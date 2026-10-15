@@ -1,17 +1,21 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binary, built with `go test -c`
+# Go
+/bin/
 *.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+coverage.*
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Node
+node_modules/
+web/dist/
+.env.local
+.env.*.local
 
+# Firebase emulator
+*-debug.log
+.firebase/
+
+# Editors / OS
 .idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store

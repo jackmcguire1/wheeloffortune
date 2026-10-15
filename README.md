@@ -4,6 +4,11 @@ Build a wheel, share it, spin it. Every spin is settled **atomically in Redis**
 by a Lua script, so the odds the UI shows are the odds you get, and limited
 prizes can never be oversold, however many people spin at once.
 
+> Originally built for the **Redis Hackathon (August 2022)**, in the *Wacky
+> Wildcards* category: [dev.to post](https://dev.to/jackmcguire1/wheel-of-fortune-3521)
+> · [Devpost](https://devpost.com/software/wheeloffortune). v2 is a ground-up
+> modernisation of that entry; see [History](#history).
+
 ![Home](docs/screenshots/home.png)
 
 | Spin | Builder | Mobile (light) |
@@ -70,10 +75,34 @@ Keys are hash-tagged on the wheel id so a wheel's keys share a cluster slot.
 | `wheel:{id}:history` | list | last 100 spins as JSON, newest first |
 | `wheels` | zset | wheel ids scored by creation time |
 
-A spin runs [`spin.lua`](internal/wheel/redisstore/spin.lua), which reads the
-definition and stock, computes the weights for the wheel's mode, picks a
-segment from a random value supplied by the server, then decrements stock,
-increments wins and appends the history entry, all in one atomic script.
+### How a spin works: one Lua script
+
+The whole spin is [`spin.lua`](internal/wheel/redisstore/spin.lua), run with
+`EVALSHA`. Redis runs a script to completion before serving any other command,
+so read, decide and write happen as one step:
+
+```
+SpinWheel ──► Go: r = rand.Float64()        (randomness stays in Go, injectable in tests)
+          ──► EVALSHA spin.lua  KEYS = def, state, stock, wins, history
+                ├─ missing def?        → -1  NotFound
+                ├─ state.enabled != 1? → -2  FailedPrecondition (paused)
+                ├─ weight per segment, by mode:
+                │     equal      1                if it has stock (or is unlimited)
+                │     weighted   segment.weight   if it has stock (or is unlimited)
+                │     inventory  remaining stock
+                ├─ total == 0?         → -3  FailedPrecondition (out of prizes)
+                ├─ walk the cumulative weights until r * total < sum → winner
+                ├─ HINCRBY stock[winner] -1   (limited segments only)
+                ├─ HINCRBY wins[winner] 1, HINCRBY state.spins 1
+                └─ LPUSH + LTRIM history  → return winner index
+```
+
+Because nothing runs between the stock check and the decrement, a wheel can
+never give away more prizes than it has. The store tests fire 20 concurrent
+spins at a 15 prize wheel and expect exactly 15 wins. They also check that
+weighted wheels land on their configured odds. The same weighting rules are in Go (`Wheel.Weights`, which reports odds
+to clients) and in TypeScript (the builder preview). AGENTS.md lists what has
+to stay in sync.
 
 ## Running locally
 
@@ -177,6 +206,35 @@ See [`proto/wheel/v1/wheel.proto`](proto/wheel/v1/wheel.proto). In short:
 Errors use standard codes: `invalid_argument` (validation), `not_found`,
 `unauthenticated`, `permission_denied`, `failed_precondition` (paused or out of
 prizes).
+
+## History
+
+**v1, August 2022:** a Redis Hackathon entry
+([dev.to](https://dev.to/jackmcguire1/wheel-of-fortune-3521) ·
+[Devpost](https://devpost.com/software/wheeloffortune)). A gRPC server spun
+wheels with Lua scripts over `wheel:{name}:segment:{i}` counters, with an
+admin CLI, a load-testing client, and a Vue 3 (Vue CLI) UI behind an Envoy
+gRPC-Web proxy.
+
+| v1 (2022) | v2 (2026) |
+| --- | --- |
+| ![v1 Vue app](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/atoeo4ttm73zhnpggu7z.png) | ![v2 spin](docs/screenshots/spin.png) |
+
+**v2, October 2026:** same core idea (spins settled atomically by a Redis Lua
+script), modernised end to end:
+
+| | v1 | v2 |
+| --- | --- | --- |
+| Go | 1.18, go-redis v9 beta | 1.27, go-redis v9, `log/slog`, `go tool` codegen |
+| API | gRPC + Envoy proxy for browsers | Connect: gRPC, gRPC-Web and HTTP on one port, no proxy |
+| Odds | weighted by remaining prizes | Equal, Weighted or Inventory per wheel; unlimited segments |
+| Lua | `spin.lua` + `state.lua`, status checked outside the script | one `spin.lua` that checks, picks, decrements and records atomically |
+| Wheels | named via the admin CLI, a fixed segment count for the whole server (default 5), UI hard-coded to `test` | users create any number of wheels in the UI or CLI, each with 2–24 named, coloured segments |
+| Auth | none | Firebase Auth (emulator locally), owner-only admin actions |
+| Frontend | Vue CLI + `vue3-fortune-wheel` | Vite, Vue 3.5, Vuetify 4, TypeScript, custom SVG wheel |
+| CLI | `cmd/admin`, `cmd/client` | `wheelctl` (create, spin/load-test, history, pause, restock, …) |
+| Dev loop | several terminals + protoc install | `make dev`; toolchain pinned with mise |
+| Quality | no tests | unit, Redis (miniredis or real) and Connect tests, golangci-lint, CI |
 
 ## License
 

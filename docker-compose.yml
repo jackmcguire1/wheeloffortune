@@ -1,14 +1,38 @@
-version: '3.8'
 services:
   redis:
     image: redis/redis-stack:latest
-    restart: always
     ports:
-      - '6379:6379'
-      - '8001:8001'
-  envoy:
+      - "${REDIS_PORT:-6379}:6379"
+      - "${REDISINSIGHT_PORT:-8001}:8001" # RedisInsight
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 15
+
+  firebase:
     build:
-      context: envoy
+      context: .
+      dockerfile: deploy/firebase/Dockerfile
     ports:
-      - 8080:8080
-      - 9901:9901
+      - "9099:9099" # Auth emulator
+      - "4000:4000" # Emulator UI
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:9099/ | grep -q '\"ready\": true'"]
+      interval: 2s
+      retries: 30
+
+  server:
+    build: .
+    profiles: ["server"] # `docker compose --profile server up` to run the API in Docker too
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      FIREBASE_AUTH_EMULATOR_HOST: firebase:9099
+      FIREBASE_PROJECT_ID: demo-wheeloffortune
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    ports:
+      - "7755:7755"
+    depends_on:
+      redis:
+        condition: service_healthy
+      firebase:
+        condition: service_healthy

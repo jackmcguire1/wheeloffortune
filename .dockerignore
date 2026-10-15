@@ -1,0 +1,4 @@
+.git
+web
+deploy
+**/node_modules
